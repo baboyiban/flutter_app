@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/constants/button_styles.dart';
 import '../widgets/qr_view_widget.dart';
 import 'result_screen.dart'; // ResultScreen import 추가
 
@@ -39,7 +40,6 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('QR 코드 스캐너'),
         actions: [
           if (_isCameraActive)
             IconButton(
@@ -56,13 +56,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
               color: Colors.black,
               child: _isCameraActive
                   ? QRViewWidget(onQRScanned: _handleQRScanned)
-                  : Center(
-                      child: Icon(
-                        Icons.qr_code_scanner,
-                        size: 100,
-                        color: Colors.white.withOpacity(0.3),
-                      ),
-                    ),
+                  : Center(),
             ),
           ),
           Expanded(
@@ -72,20 +66,10 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    _isCameraActive ? 'QR 코드를 스캔해주세요' : '스캔 버튼을 눌러 시작하세요',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                  const SizedBox(height: 20),
                   ElevatedButton.icon(
-                    icon: Icon(
-                      _isCameraActive ? Icons.stop : Icons.qr_code_scanner,
-                    ),
-                    label: Text(_isCameraActive ? '스캔 중지' : 'QR 스캔 시작'),
+                    label: Text(_isCameraActive ? '중지' : '스캔'),
                     onPressed: _toggleCamera,
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 50),
-                    ),
+                    style: AppButtonStyles.button,
                   ),
                 ],
               ),
