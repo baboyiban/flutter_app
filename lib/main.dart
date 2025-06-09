@@ -14,83 +14,84 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'QR 코드 스캐너',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const HomePage(),
+      home: const QRScannerPage(),
     );
   }
 }
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+class QRScannerPage extends StatefulWidget {
+  const QRScannerPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('QR 코드 스캐너')),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const QRScanner()),
-            );
-          },
-          child: const Text('QR 코드 스캔 시작'),
-        ),
-      ),
-    );
-  }
+  State<QRScannerPage> createState() => _QRScannerPageState();
 }
 
-class QRScanner extends StatefulWidget {
-  const QRScanner({Key? key}) : super(key: key);
-
-  @override
-  State<StatefulWidget> createState() => _QRScannerState();
-}
-
-class _QRScannerState extends State<QRScanner> {
+class _QRScannerPageState extends State<QRScannerPage> {
   Barcode? result;
   QRViewController? controller;
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
+  bool isCameraActive = false;
 
   @override
   void reassemble() {
     super.reassemble();
     if (Platform.isAndroid) {
-      controller!.pauseCamera();
+      controller?.pauseCamera();
     }
-    controller!.resumeCamera();
+    controller?.resumeCamera();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('QR 코드 스캔 중'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.flash_on),
-            onPressed: () async {
-              await controller?.toggleFlash();
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.cameraswitch),
-            onPressed: () async {
-              await controller?.flipCamera();
-            },
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('QR 코드 스캐너')),
       body: Column(
         children: <Widget>[
-          Expanded(flex: 4, child: _buildQrView(context)),
+          Expanded(
+            flex: 4,
+            child: Container(
+              color: Colors.black,
+              child: isCameraActive ? _buildQrView(context) : null,
+            ),
+          ),
           Expanded(
             flex: 1,
             child: Center(
-              child: (result != null)
-                  ? Text('스캔 결과: ${result!.code}')
-                  : const Text('QR 코드를 스캔해주세요'),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (result != null)
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        '스캔 결과: ${result!.code}',
+                        style: const TextStyle(fontSize: 16),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (isCameraActive) {
+                        // 이미 카메라가 활성화된 경우 스캔 중지
+                        controller?.pauseCamera();
+                        setState(() {
+                          isCameraActive = false;
+                        });
+                      } else {
+                        // 카메라가 비활성화된 경우 스캔 시작
+                        setState(() {
+                          isCameraActive = true;
+                          result = null; // 이전 결과 초기화
+                        });
+                        if (controller != null) {
+                          controller?.resumeCamera();
+                        }
+                      }
+                    },
+                    child: Text(isCameraActive ? '스캔 중지' : 'QR 스캔 시작'),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -119,14 +120,14 @@ class _QRScannerState extends State<QRScanner> {
   }
 
   void _onQRViewCreated(QRViewController controller) {
-    setState(() {
-      this.controller = controller;
-    });
+    this.controller = controller;
 
     controller.scannedDataStream.listen((scanData) {
       setState(() {
         result = scanData;
+        isCameraActive = false; // 스캔 완료 후 카메라 비활성화
       });
+      controller.pauseCamera(); // 스캔 완료 후 카메라 일시정지
     });
   }
 
