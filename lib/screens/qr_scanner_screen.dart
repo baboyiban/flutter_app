@@ -1,3 +1,4 @@
+// lib/screens/qr_scanner_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_app/constants/button_styles.dart';
 import '../widgets/qr_view_widget.dart';

@@ -1,3 +1,4 @@
+// lib/widgets/qr_view_widget.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';

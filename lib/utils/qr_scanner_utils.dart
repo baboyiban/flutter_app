@@ -1,3 +1,4 @@
+// lib/utils/qr_scanner_utils.dart
 import 'package:flutter/material.dart';
 
 double getScanAreaSize(BuildContext context) {
