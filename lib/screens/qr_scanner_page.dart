@@ -21,7 +21,6 @@ class _QRScannerPageState extends State<QRScannerPage> {
   bool isScanning = false;
   StreamSubscription<Barcode>? _scanSubscription;
   bool _isProcessing = false;
-  bool _isVehicleFull = false; // 추가: 차량이 가득 찼는지 여부
 
   final Map<String, String> zoneMap = {
     '서울': 'S',
@@ -30,54 +29,62 @@ class _QRScannerPageState extends State<QRScannerPage> {
     '강원': 'G',
   };
 
-  Future<void> _fetchVehicleStatus() async {
-    const String vehicleApiUrl = 'https://choidaruhan.xyz/api/vehicle/1000';
+  // 스캔 시작/종료 토글
+  void _toggleScan() {
+    setState(() {
+      isScanning = !isScanning;
+      result = isScanning ? 'QR 코드를 스캔 중...' : '버튼을 눌러 스캔을 시작하세요';
+      if (isScanning) {
+        controller?.resumeCamera();
+      } else {
+        controller?.pauseCamera();
+      }
+    });
+  }
+
+  // 스캔 결과 처리
+  Future<void> _sendScanResult(String scannedData) async {
+    if (_isProcessing) return;
+    _isProcessing = true;
+
+    // 1. 스캔 전 차량 상태 확인
     try {
-      final response = await http
+      const String vehicleApiUrl = 'https://choidaruhan.xyz/api/vehicle/1000';
+      final vehicleResponse = await http
           .get(Uri.parse(vehicleApiUrl))
           .timeout(const Duration(seconds: 5));
 
-      if (response.statusCode == 200) {
-        final responseBody = jsonDecode(response.body);
-        final int currentLoad = responseBody['current_load'];
-        final int maxLoad = responseBody['max_load'];
+      if (vehicleResponse.statusCode == 200) {
+        final vehicleData = jsonDecode(vehicleResponse.body);
+        final int currentLoad = vehicleData['current_load'];
+        final int maxLoad = vehicleData['max_load'];
 
-        setState(() {
-          _isVehicleFull = currentLoad >= maxLoad;
-          if (_isVehicleFull) {
-            result = '차량이 가득 찼습니다. 스캔할 수 없습니다.';
-          }
-        });
+        if (currentLoad >= maxLoad) {
+          setState(() => result = '차량이 가득 찼습니다. 스캔할 수 없습니다.');
+          _isProcessing = false;
+          return; // API 요청 차단
+        }
       } else {
-        throw Exception('Failed to fetch vehicle status');
+        throw Exception('차량 상태 확인 실패');
       }
     } catch (e) {
-      setState(
-        () => result =
-            '차량 상태 확인 중 오류: ${e.toString().replaceAll('Exception: ', '')}',
-      );
+      setState(() => result = '차량 상태 확인 오류: ${e.toString()}');
+      _isProcessing = false;
+      return;
     }
-  }
 
-  Future<void> _sendScanResult(String scannedData) async {
-    if (_isProcessing || _isVehicleFull) return; // 차량이 가득 찼으면 무시
-    _isProcessing = true;
-
-    const String apiUrl = 'https://choidaruhan.xyz/api/package';
+    // 2. 차량에 여유가 있을 경우 데이터 전송
+    const String packageApiUrl = 'https://choidaruhan.xyz/api/package';
     try {
       final parts = scannedData.split('\n');
-      if (parts.length < 2) {
-        throw Exception('Invalid QR format: [Region]\n[PackageType] expected');
-      }
+      if (parts.length < 2) throw Exception('올바르지 않은 QR 형식: [지역]\n[패키지 타입] 필요');
 
       final regionId = zoneMap[parts[0]];
-      if (regionId == null) {
-        throw Exception('Unknown region: ${parts[0]}');
-      }
+      if (regionId == null) throw Exception('알 수 없는 지역: ${parts[0]}');
 
       final response = await http
           .post(
-            Uri.parse(apiUrl),
+            Uri.parse(packageApiUrl),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
               'package_type': parts[1],
@@ -87,12 +94,12 @@ class _QRScannerPageState extends State<QRScannerPage> {
           )
           .timeout(const Duration(seconds: 5));
 
-      final responseBody = jsonDecode(response.body);
       if (response.statusCode == 201) {
         setState(() => result = '등록 완료: ${parts[0]}, ${parts[1]}');
-        await _fetchVehicleStatus(); // 스캔 후 차량 상태 다시 확인
       } else {
-        throw Exception(responseBody['error'] ?? 'Failed to create record');
+        throw Exception(
+          jsonDecode(response.body)['error'] ?? 'Failed to create record',
+        );
       }
     } catch (e) {
       setState(
@@ -101,12 +108,6 @@ class _QRScannerPageState extends State<QRScannerPage> {
     } finally {
       _isProcessing = false;
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchVehicleStatus(); // 초기 차량 상태 확인
   }
 
   @override
@@ -125,9 +126,7 @@ class _QRScannerPageState extends State<QRScannerPage> {
               ),
               ScanControlButton(
                 isScanning: isScanning,
-                onPressed: _isVehicleFull
-                    ? () {}
-                    : _toggleScan, // Use empty function instead of null
+                onPressed: _toggleScan, // 항상 활성화
               ),
             ],
           ),
@@ -137,27 +136,11 @@ class _QRScannerPageState extends State<QRScannerPage> {
     );
   }
 
-  void _toggleScan() {
-    setState(() {
-      isScanning = !isScanning;
-      if (isScanning) {
-        result = 'QR 코드를 스캔 중...';
-        controller?.resumeCamera();
-      } else {
-        result = '버튼을 눌러 스캔을 시작하세요';
-        controller?.pauseCamera();
-      }
-    });
-  }
-
   void _onQRViewCreated(QRViewController controller) {
     this.controller = controller;
     _scanSubscription?.cancel();
     _scanSubscription = controller.scannedDataStream.listen((scanData) async {
-      if (scanData.code != null &&
-          isScanning &&
-          !_isProcessing &&
-          !_isVehicleFull) {
+      if (scanData.code != null && isScanning && !_isProcessing) {
         setState(() {
           isScanning = false;
           result = '처리 중...';
