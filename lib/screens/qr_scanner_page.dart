@@ -61,7 +61,9 @@ class _QRScannerPageState extends State<QRScannerPage> {
       if (response.statusCode == 201) {
         setState(() => result = '등록 완료: ${parts[0]}, ${parts[1]}');
       } else {
-        throw Exception(responseBody['error'] ?? 'Failed to create record');
+        // 서버에서 반환한 에러 메시지를 그대로 표시
+        final errorMessage = responseBody['error'] ?? '알 수 없는 오류가 발생했습니다';
+        setState(() => result = '오류: $errorMessage');
       }
     } catch (e) {
       setState(
