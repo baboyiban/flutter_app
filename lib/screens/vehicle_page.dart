@@ -129,36 +129,32 @@ class _VehiclePageState extends State<VehiclePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '📦 현재 수량: ${vehicles.isNotEmpty ? "${vehicles[0].currentLoad}/${vehicles[0].maxLoad}" : "..."}',
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 16),
-            IntrinsicWidth(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('🚚 차량 상태: ', style: const TextStyle(fontSize: 16)),
-                  vehicles.isNotEmpty
-                      ? _buildStatusIndicator(vehicles[0].ledStatus)
-                      : const CircularProgressIndicator(),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '🚀 현재 위치: ${vehicles.isNotEmpty ? "(${vehicles[0].coordX}, ${vehicles[0].coordY})" : "..."}',
-              style: const TextStyle(fontSize: 16),
-            ),
-          ],
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '📦 현재 수량: ${vehicles.isNotEmpty ? "${vehicles[0].currentLoad}/${vehicles[0].maxLoad}" : "..."}',
+          style: const TextStyle(fontSize: 16),
         ),
-      ),
+        const SizedBox(height: 16),
+        IntrinsicWidth(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('🚚 차량 상태: ', style: const TextStyle(fontSize: 16)),
+              vehicles.isNotEmpty
+                  ? _buildStatusIndicator(vehicles[0].ledStatus)
+                  : Text('...', style: const TextStyle(fontSize: 16)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          '🚀 현재 위치: ${vehicles.isNotEmpty ? "(${vehicles[0].coordX}, ${vehicles[0].coordY})" : "..."}',
+          style: const TextStyle(fontSize: 16),
+        ),
+      ],
     );
   }
 }
