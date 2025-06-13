@@ -20,7 +20,8 @@ class _QRScannerPageState extends State<QRScannerPage> {
   String result = '버튼을 눌러 스캔을 시작하세요';
   bool isScanning = false;
   StreamSubscription<Barcode>? _scanSubscription;
-  bool _isProcessing = false; // 추가: 중복 처리 방지
+  bool _isProcessing = false;
+  bool _isVehicleFull = false; // 추가: 차량이 가득 찼는지 여부
 
   final Map<String, String> zoneMap = {
     '서울': 'S',
@@ -29,8 +30,37 @@ class _QRScannerPageState extends State<QRScannerPage> {
     '강원': 'G',
   };
 
+  Future<void> _fetchVehicleStatus() async {
+    const String vehicleApiUrl = 'https://choidaruhan.xyz/api/vehicle/1000';
+    try {
+      final response = await http
+          .get(Uri.parse(vehicleApiUrl))
+          .timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
+        final int currentLoad = responseBody['current_load'];
+        final int maxLoad = responseBody['max_load'];
+
+        setState(() {
+          _isVehicleFull = currentLoad >= maxLoad;
+          if (_isVehicleFull) {
+            result = '차량이 가득 찼습니다. 스캔할 수 없습니다.';
+          }
+        });
+      } else {
+        throw Exception('Failed to fetch vehicle status');
+      }
+    } catch (e) {
+      setState(
+        () => result =
+            '차량 상태 확인 중 오류: ${e.toString().replaceAll('Exception: ', '')}',
+      );
+    }
+  }
+
   Future<void> _sendScanResult(String scannedData) async {
-    if (_isProcessing) return; // 이미 처리 중이면 무시
+    if (_isProcessing || _isVehicleFull) return; // 차량이 가득 찼으면 무시
     _isProcessing = true;
 
     const String apiUrl = 'https://choidaruhan.xyz/api/package';
@@ -52,7 +82,7 @@ class _QRScannerPageState extends State<QRScannerPage> {
             body: jsonEncode({
               'package_type': parts[1],
               'region_id': regionId,
-              'timestamp': DateTime.now().toIso8601String(), // 추가: 고유성 보장
+              'timestamp': DateTime.now().toIso8601String(),
             }),
           )
           .timeout(const Duration(seconds: 5));
@@ -60,6 +90,7 @@ class _QRScannerPageState extends State<QRScannerPage> {
       final responseBody = jsonDecode(response.body);
       if (response.statusCode == 201) {
         setState(() => result = '등록 완료: ${parts[0]}, ${parts[1]}');
+        await _fetchVehicleStatus(); // 스캔 후 차량 상태 다시 확인
       } else {
         throw Exception(responseBody['error'] ?? 'Failed to create record');
       }
@@ -70,6 +101,12 @@ class _QRScannerPageState extends State<QRScannerPage> {
     } finally {
       _isProcessing = false;
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchVehicleStatus(); // 초기 차량 상태 확인
   }
 
   @override
@@ -86,7 +123,12 @@ class _QRScannerPageState extends State<QRScannerPage> {
                 qrKey: qrKey,
                 onViewCreated: _onQRViewCreated,
               ),
-              ScanControlButton(isScanning: isScanning, onPressed: _toggleScan),
+              ScanControlButton(
+                isScanning: isScanning,
+                onPressed: _isVehicleFull
+                    ? () {}
+                    : _toggleScan, // Use empty function instead of null
+              ),
             ],
           ),
         ),
@@ -112,7 +154,10 @@ class _QRScannerPageState extends State<QRScannerPage> {
     this.controller = controller;
     _scanSubscription?.cancel();
     _scanSubscription = controller.scannedDataStream.listen((scanData) async {
-      if (scanData.code != null && isScanning && !_isProcessing) {
+      if (scanData.code != null &&
+          isScanning &&
+          !_isProcessing &&
+          !_isVehicleFull) {
         setState(() {
           isScanning = false;
           result = '처리 중...';
