@@ -7,13 +7,13 @@ class TopLabelBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.all(4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: const [
-          Label(text: '직원 A'),
+          Label(text: '👤 직원 A'),
           SizedBox(width: 4),
-          Label(text: '차량 B'),
+          Label(text: '🚚 A-1000'),
         ],
       ),
     );

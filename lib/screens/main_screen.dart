@@ -3,7 +3,7 @@ import '../constants/screen_type.dart';
 import '../widgets/top_label_bar.dart';
 import '../widgets/custom_bottom_navigation_bar.dart';
 import 'qr_scanner_page.dart';
-import 'parcel_page.dart';
+import 'package_page.dart';
 import 'vehicle_page.dart';
 
 class MainScreen extends StatefulWidget {
@@ -45,7 +45,7 @@ class _MainScreenState extends State<MainScreen> {
       case ScreenType.qr:
         return const QRScannerPage();
       case ScreenType.parcel:
-        return const ParcelPage();
+        return const PackagePage();
       case ScreenType.vehicle:
         return const VehiclePage();
     }

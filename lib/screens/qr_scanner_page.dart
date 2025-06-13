@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:http/http.dart' as http;
+import 'dart:async';
 import 'dart:convert';
 import '../widgets/qr_scanner_view.dart';
 import '../widgets/scan_control_button.dart';
@@ -19,51 +19,56 @@ class _QRScannerPageState extends State<QRScannerPage> {
   QRViewController? controller;
   String result = '버튼을 눌러 스캔을 시작하세요';
   bool isScanning = false;
+  StreamSubscription<Barcode>? _scanSubscription;
+  bool _isProcessing = false; // 추가: 중복 처리 방지
 
-  // 지역 코드 매핑
   final Map<String, String> zoneMap = {
-    '서울': '02',
-    '경기': '031',
-    '경북': '054',
-    '강원': '033',
+    '서울': 'S',
+    '경기': 'K',
+    '경북': 'W',
+    '강원': 'G',
   };
 
   Future<void> _sendScanResult(String scannedData) async {
+    if (_isProcessing) return; // 이미 처리 중이면 무시
+    _isProcessing = true;
+
     const String apiUrl = 'https://choidaruhan.xyz/api/package';
     try {
-      // QR 코드 데이터 파싱 (예: "서울 과일" 형식)
-      final List<String> parts = scannedData.split('\n');
+      final parts = scannedData.split('\n');
       if (parts.length < 2) {
-        throw Exception('유효하지 않은 QR 코드 데이터 형식입니다.');
+        throw Exception('Invalid QR format: [Region]\n[PackageType] expected');
       }
 
-      final String regionName = parts[0];
-      final String packageType = parts[1];
-      final String? regionId = zoneMap[regionName];
-
+      final regionId = zoneMap[parts[0]];
       if (regionId == null) {
-        throw Exception('지역 이름을 찾을 수 없습니다: $regionName');
+        throw Exception('Unknown region: ${parts[0]}');
       }
 
-      final response = await http.post(
-        Uri.parse(apiUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'package_type': packageType, 'region_id': regionId}),
-      );
+      final response = await http
+          .post(
+            Uri.parse(apiUrl),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'package_type': parts[1],
+              'region_id': regionId,
+              'timestamp': DateTime.now().toIso8601String(), // 추가: 고유성 보장
+            }),
+          )
+          .timeout(const Duration(seconds: 5));
 
+      final responseBody = jsonDecode(response.body);
       if (response.statusCode == 201) {
-        setState(() {
-          result = '전송 완료: ${scannedData.split('\n')}';
-        });
+        setState(() => result = '등록 완료: ${parts[0]}, ${parts[1]}');
       } else {
-        setState(() {
-          result = '전송 실패: ${response.body}';
-        });
+        throw Exception(responseBody['error'] ?? 'Failed to create record');
       }
     } catch (e) {
-      setState(() {
-        result = '오류 발생: $e';
-      });
+      setState(
+        () => result = '오류: ${e.toString().replaceAll('Exception: ', '')}',
+      );
+    } finally {
+      _isProcessing = false;
     }
   }
 
@@ -71,13 +76,12 @@ class _QRScannerPageState extends State<QRScannerPage> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // QRScannerView와 ScanControlButton을 중앙에 배치하기 위한 Expanded
         Expanded(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               QRScannerView(
+                key: const ValueKey('qr_view'),
                 isScanning: isScanning,
                 qrKey: qrKey,
                 onViewCreated: _onQRViewCreated,
@@ -86,7 +90,6 @@ class _QRScannerPageState extends State<QRScannerPage> {
             ],
           ),
         ),
-        // ScanResultDisplay를 바닥에 붙이기
         ScanResultDisplay(result: result),
       ],
     );
@@ -95,32 +98,34 @@ class _QRScannerPageState extends State<QRScannerPage> {
   void _toggleScan() {
     setState(() {
       isScanning = !isScanning;
-      if (!isScanning) {
-        controller?.pauseCamera();
-        result = '버튼을 눌러 스캔을 시작하세요';
-      } else {
+      if (isScanning) {
         result = 'QR 코드를 스캔 중...';
         controller?.resumeCamera();
+      } else {
+        result = '버튼을 눌러 스캔을 시작하세요';
+        controller?.pauseCamera();
       }
     });
   }
 
   void _onQRViewCreated(QRViewController controller) {
     this.controller = controller;
-    controller.scannedDataStream.listen((scanData) {
-      if (scanData.code != null) {
+    _scanSubscription?.cancel();
+    _scanSubscription = controller.scannedDataStream.listen((scanData) async {
+      if (scanData.code != null && isScanning && !_isProcessing) {
         setState(() {
-          result = '스캔 완료: ${scanData.code}';
           isScanning = false;
-          controller.pauseCamera();
+          result = '처리 중...';
         });
-        _sendScanResult(scanData.code!);
+        await _sendScanResult(scanData.code!);
+        controller.pauseCamera();
       }
     });
   }
 
   @override
   void dispose() {
+    _scanSubscription?.cancel();
     controller?.dispose();
     super.dispose();
   }

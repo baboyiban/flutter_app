@@ -21,9 +21,9 @@ class CustomBottomNavigationBar extends StatelessWidget {
         children: [
           _buildNavButton('QR', ScreenType.qr),
           const SizedBox(width: 4),
-          _buildNavButton('택배', ScreenType.parcel),
-          const SizedBox(width: 4),
           _buildNavButton('차량', ScreenType.vehicle),
+          const SizedBox(width: 4),
+          _buildNavButton('택배', ScreenType.parcel),
           const SizedBox(width: 4),
           Expanded(
             child: Button(text: '로그아웃', color: AppColors.red),

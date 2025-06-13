@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/constants/app_colors.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
 class QRScannerView extends StatelessWidget {
@@ -25,7 +26,7 @@ class QRScannerView extends StatelessWidget {
             )
           : Container(
               decoration: BoxDecoration(
-                color: Colors.black,
+                color: AppColors.black,
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
