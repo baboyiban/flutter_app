@@ -72,7 +72,9 @@ class _PackagePageState extends State<PackagePage> {
   Future<void> fetchPackages() async {
     try {
       final response = await http.get(
-        Uri.parse('https://choidaruhan.xyz/api/package'),
+        Uri.parse(
+          'https://choidaruhan.xyz/api/package/search?sort=-registered_at',
+        ),
       );
 
       if (!mounted) return;
