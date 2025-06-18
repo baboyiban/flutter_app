@@ -100,13 +100,13 @@ class _VehiclePageState extends State<VehiclePage> {
     Color backgroundColor;
     switch (status) {
       case '노랑':
-        backgroundColor = const Color(0xFFFFFFBF);
+        backgroundColor = AppColors.yellow;
       case '빨강':
-        backgroundColor = const Color(0xFFFFBFBF);
+        backgroundColor = AppColors.red;
       case '초록':
-        backgroundColor = const Color(0xFFBFFFBF);
+        backgroundColor = AppColors.green;
       default:
-        backgroundColor = Colors.grey;
+        backgroundColor = AppColors.gray;
     }
 
     return Container(
