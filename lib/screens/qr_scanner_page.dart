@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
@@ -6,6 +7,8 @@ import 'dart:convert';
 import '../widgets/qr_scanner_view.dart';
 import '../widgets/scan_control_button.dart';
 import '../widgets/scan_result_display.dart';
+
+final String apiUrl = dotenv.env['API_URL']!;
 
 class QRScannerPage extends StatefulWidget {
   const QRScannerPage({super.key});
@@ -49,7 +52,7 @@ class _QRScannerPageState extends State<QRScannerPage> {
 
     // 1. 스캔 전 차량 상태 확인
     try {
-      const String vehicleApiUrl = 'https://choidaruhan.xyz/api/vehicle/1000';
+      final String vehicleApiUrl = '$apiUrl/api/vehicle/1000';
       final vehicleResponse = await http
           .get(Uri.parse(vehicleApiUrl))
           .timeout(const Duration(seconds: 5));
@@ -115,20 +118,23 @@ class _QRScannerPageState extends State<QRScannerPage> {
     return Column(
       children: [
         Expanded(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              QRScannerView(
-                key: const ValueKey('qr_view'),
-                isScanning: isScanning,
-                qrKey: qrKey,
-                onViewCreated: _onQRViewCreated,
-              ),
-              ScanControlButton(
-                isScanning: isScanning,
-                onPressed: _toggleScan, // 항상 활성화
-              ),
-            ],
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                QRScannerView(
+                  key: const ValueKey('qr_view'),
+                  isScanning: isScanning,
+                  qrKey: qrKey,
+                  onViewCreated: _onQRViewCreated,
+                ),
+                const SizedBox(height: 8),
+                ScanControlButton(
+                  isScanning: isScanning,
+                  onPressed: _toggleScan,
+                ),
+              ],
+            ),
           ),
         ),
         ScanResultDisplay(result: result),

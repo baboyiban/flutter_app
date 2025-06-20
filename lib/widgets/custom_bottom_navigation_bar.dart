@@ -6,11 +6,13 @@ import 'button.dart';
 class CustomBottomNavigationBar extends StatelessWidget {
   final ScreenType currentScreen;
   final Function(ScreenType) onScreenChanged;
+  final VoidCallback? onLogout;
 
   const CustomBottomNavigationBar({
     super.key,
     required this.currentScreen,
     required this.onScreenChanged,
+    this.onLogout,
   });
 
   @override
@@ -26,7 +28,11 @@ class CustomBottomNavigationBar extends StatelessWidget {
           _buildNavButton('택배', ScreenType.parcel),
           const SizedBox(width: 4),
           Expanded(
-            child: Button(text: '로그아웃', color: AppColors.red),
+            child: Button(
+              text: '로그아웃',
+              color: AppColors.red,
+              onPressed: onLogout,
+            ),
           ),
         ],
       ),

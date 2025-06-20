@@ -7,7 +7,8 @@ import 'package_page.dart';
 import 'vehicle_page.dart';
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  final VoidCallback? onLogout;
+  const MainScreen({super.key, this.onLogout});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -25,6 +26,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false, // 이 줄 추가!
       body: SafeArea(
         child: Column(
           children: [
@@ -33,6 +35,7 @@ class _MainScreenState extends State<MainScreen> {
             CustomBottomNavigationBar(
               currentScreen: currentScreen,
               onScreenChanged: _changeScreen,
+              onLogout: widget.onLogout,
             ),
           ],
         ),
