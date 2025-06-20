@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/app_config.dart';
 import 'package:flutter_app/constants/app_colors.dart';
+
 import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:convert';
@@ -78,7 +80,7 @@ class _VehiclePageState extends State<VehiclePage> {
   Future<void> fetchVehicles() async {
     try {
       final response = await http.get(
-        Uri.parse('https://choidaruhan.xyz/api/vehicle/1000'),
+        Uri.parse('${AppConfig.apiUrl}/api/vehicle/1000'),
       );
 
       if (!mounted) return;

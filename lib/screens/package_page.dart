@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/constants/app_colors.dart';
+import 'package:flutter_app/app_config.dart';
+
 import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:convert';
@@ -72,9 +74,7 @@ class _PackagePageState extends State<PackagePage> {
   Future<void> fetchPackages() async {
     try {
       final response = await http.get(
-        Uri.parse(
-          'https://choidaruhan.xyz/api/package/search?sort=-registered_at',
-        ),
+        Uri.parse('${AppConfig.apiUrl}/api/package/search?sort=-registered_at'),
       );
 
       if (!mounted) return;

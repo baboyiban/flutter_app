@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_app/app_config.dart';
+
+
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
@@ -7,8 +9,6 @@ import 'dart:convert';
 import '../widgets/qr_scanner_view.dart';
 import '../widgets/scan_control_button.dart';
 import '../widgets/scan_result_display.dart';
-
-final String apiUrl = dotenv.env['API_URL']!;
 
 class QRScannerPage extends StatefulWidget {
   const QRScannerPage({super.key});
@@ -52,7 +52,7 @@ class _QRScannerPageState extends State<QRScannerPage> {
 
     // 1. 스캔 전 차량 상태 확인
     try {
-      final String vehicleApiUrl = '$apiUrl/api/vehicle/1000';
+      final String vehicleApiUrl = '${AppConfig.apiUrl}/api/vehicle/1000';
       final vehicleResponse = await http
           .get(Uri.parse(vehicleApiUrl))
           .timeout(const Duration(seconds: 5));
@@ -77,7 +77,7 @@ class _QRScannerPageState extends State<QRScannerPage> {
     }
 
     // 2. 차량에 여유가 있을 경우 데이터 전송
-    const String packageApiUrl = 'https://choidaruhan.xyz/api/package';
+    final String packageApiUrl = '${AppConfig.apiUrl}/api/package';
     try {
       final parts = scannedData.split('\n');
       if (parts.length < 2) throw Exception('올바르지 않은 QR 형식: [지역]\n[패키지 타입] 필요');
