@@ -14,7 +14,7 @@ class MqttEmergencyOverlay extends StatefulWidget {
 
 class _MqttEmergencyOverlayState extends State<MqttEmergencyOverlay> {
   late MqttServerClient client;
-  int? internalId;
+  int? vehicleId;
   String? message;
   bool showAlert = false;
   bool confirmed = false;
@@ -61,7 +61,7 @@ class _MqttEmergencyOverlayState extends State<MqttEmergencyOverlay> {
 
     if (data['led_status'] == '하양') {
       setState(() {
-        internalId = data['internal_id'];
+        vehicleId = data['vehicle_id'];
         message = data['message'];
         showAlert = true;
         confirmed = false;
@@ -70,9 +70,9 @@ class _MqttEmergencyOverlayState extends State<MqttEmergencyOverlay> {
   }
 
   void _confirm() {
-    if (internalId != null) {
+    if (vehicleId != null) {
       final builder = MqttClientPayloadBuilder();
-      builder.addString(jsonEncode({'internal_id': internalId}));
+      builder.addString(jsonEncode({'vehicle_id': vehicleId}));
       client.publishMessage(
         'vehicle/emergency/confirm',
         MqttQos.atLeastOnce,

@@ -8,7 +8,6 @@ import 'dart:convert';
 import 'package:logging/logging.dart';
 
 class Vehicle {
-  final int internalId;
   final String vehicleId;
   final int currentLoad;
   final int maxLoad;
@@ -18,7 +17,6 @@ class Vehicle {
   final int coordY;
 
   Vehicle({
-    required this.internalId,
     required this.vehicleId,
     required this.currentLoad,
     required this.maxLoad,
@@ -30,7 +28,6 @@ class Vehicle {
 
   factory Vehicle.fromJson(Map<String, dynamic> json) {
     return Vehicle(
-      internalId: json['internal_id'],
       vehicleId: json['vehicle_id'],
       currentLoad: json['current_load'],
       maxLoad: json['max_load'],
