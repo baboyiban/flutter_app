@@ -1,43 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/app_config.dart';
 import 'package:flutter_app/constants/app_colors.dart';
-
+import 'package:flutter_app/widgets/custom_alert_dialog.dart';
+import 'package:flutter_app/widgets/custom_button.dart';
+import 'package:flutter_app/services/mqtt_service.dart';
+import 'package:flutter_app/models/vehicle.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:convert';
 import 'package:logging/logging.dart';
-
-class Vehicle {
-  final String vehicleId;
-  final int currentLoad;
-  final int maxLoad;
-  final String ledStatus;
-  final bool needsConfirmation;
-  final int coordX;
-  final int coordY;
-
-  Vehicle({
-    required this.vehicleId,
-    required this.currentLoad,
-    required this.maxLoad,
-    required this.ledStatus,
-    required this.needsConfirmation,
-    required this.coordX,
-    required this.coordY,
-  });
-
-  factory Vehicle.fromJson(Map<String, dynamic> json) {
-    return Vehicle(
-      vehicleId: json['vehicle_id'],
-      currentLoad: json['current_load'],
-      maxLoad: json['max_load'],
-      ledStatus: json['led_status'],
-      needsConfirmation: json['needs_confirmation'],
-      coordX: json['coord_x'],
-      coordY: json['coord_y'],
-    );
-  }
-}
+import 'package:mqtt_client/mqtt_client.dart';
 
 class VehiclePage extends StatefulWidget {
   const VehiclePage({super.key});
@@ -51,6 +23,11 @@ class _VehiclePageState extends State<VehiclePage> {
   List<Vehicle> vehicles = [];
   Timer? _timer;
 
+  late final MqttService _mqttService;
+  static const _mqttHost = 'mqtt.choidaruhan.xyz';
+  static const _mqttPort = 1883;
+  static const _publishTopic = 'departure_A';
+
   @override
   void initState() {
     super.initState();
@@ -58,13 +35,28 @@ class _VehiclePageState extends State<VehiclePage> {
     Logger.root.onRecord.listen((record) {
       debugPrint('${record.level.name}: ${record.time}: ${record.message}');
     });
+    _mqttService = MqttService(
+      host: _mqttHost,
+      port: _mqttPort,
+      clientId: 'vehicle_page_client_${DateTime.now().millisecondsSinceEpoch}',
+    );
+    _initMqtt();
     _startAutoRefresh();
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _mqttService.disconnect();
     super.dispose();
+  }
+
+  Future<void> _initMqtt() async {
+    try {
+      await _mqttService.connect();
+    } catch (e) {
+      _logger.severe('MQTT connection failed: $e');
+    }
   }
 
   void _startAutoRefresh() {
@@ -95,15 +87,74 @@ class _VehiclePageState extends State<VehiclePage> {
     }
   }
 
+  void _callVehicle() {
+    if (vehicles.isEmpty) return;
+    final vehicle = vehicles[0];
+    if (vehicle.currentLoad <= vehicle.maxLoad) {
+      _showDepartureDialog(vehicle);
+    } else {
+      _sendDeparture();
+    }
+  }
+
+  void _sendDeparture() {
+    final builder = MqttClientPayloadBuilder();
+    builder.addString(jsonEncode({"start": true}));
+    _mqttService.publish(_publishTopic, MqttQos.atLeastOnce, builder.payload!);
+    _logger.info('Vehicle call message sent via MQTT');
+  }
+
+  void _showDepartureDialog(Vehicle vehicle) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return CustomAlertDialog(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "최대 수량(${vehicle.maxLoad}) 중 ${vehicle.currentLoad} 를 적재했습니다.\n출발하시겠습니까?",
+                style: const TextStyle(fontSize: 16, color: AppColors.black),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('아니요'),
+                  ),
+                  const SizedBox(width: 16),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      _sendDeparture();
+                    },
+                    child: const Text('예'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildStatusIndicator(String status) {
     Color backgroundColor;
     switch (status) {
       case '노랑':
         backgroundColor = AppColors.yellow;
+        break;
       case '빨강':
         backgroundColor = AppColors.red;
+        break;
       case '초록':
         backgroundColor = AppColors.green;
+        break;
       default:
         backgroundColor = AppColors.gray;
     }
@@ -128,32 +179,47 @@ class _VehiclePageState extends State<VehiclePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '📦 현재 수량: ${vehicles.isNotEmpty ? "${vehicles[0].currentLoad}/${vehicles[0].maxLoad}" : "..."}',
-          style: const TextStyle(fontSize: 16),
+    final vehicle = vehicles.isNotEmpty ? vehicles[0] : null;
+    return Center(
+      child: IntrinsicWidth(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '📦 현재 수량: ${vehicle != null ? "${vehicle.currentLoad}/${vehicle.maxLoad}" : "..."}',
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('🚚 차량 상태: ', style: const TextStyle(fontSize: 16)),
+                vehicle != null
+                    ? _buildStatusIndicator(vehicle.ledStatus)
+                    : Text('...', style: const TextStyle(fontSize: 16)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '🚀 현재 위치: ${vehicle != null ? "(${vehicle.coordX}, ${vehicle.coordY})" : "..."}',
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 32),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CustomButton(
+                  onPressed: _callVehicle,
+                  text: "차량 호출",
+                  widthType: CustomButtonWidthType.fitContent,
+                  backgroundColor: AppColors.blue,
+                ),
+              ],
+            ),
+          ],
         ),
-        const SizedBox(height: 16),
-        IntrinsicWidth(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text('🚚 차량 상태: ', style: const TextStyle(fontSize: 16)),
-              vehicles.isNotEmpty
-                  ? _buildStatusIndicator(vehicles[0].ledStatus)
-                  : Text('...', style: const TextStyle(fontSize: 16)),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          '🚀 현재 위치: ${vehicles.isNotEmpty ? "(${vehicles[0].coordX}, ${vehicles[0].coordY})" : "..."}',
-          style: const TextStyle(fontSize: 16),
-        ),
-      ],
+      ),
     );
   }
 }

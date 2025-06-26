@@ -40,6 +40,7 @@ dependencies:
   flutter_dotenv: ^5.2.1
   shared_preferences: ^2.5.3
   mqtt_client: ^10.9.2
+  typed_data: ^1.4.0
 
 dev_dependencies:
   flutter_test:

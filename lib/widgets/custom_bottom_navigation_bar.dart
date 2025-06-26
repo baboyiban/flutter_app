@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../constants/screen_type.dart';
 import '../constants/app_colors.dart';
-import 'button.dart';
+import 'custom_button.dart';
 
 class CustomBottomNavigationBar extends StatelessWidget {
   final ScreenType currentScreen;
@@ -28,7 +28,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
           _buildNavButton('택배', ScreenType.parcel),
           const SizedBox(width: 4),
           Expanded(
-            child: Button(
+            child: CustomButton(
               text: '로그아웃',
               backgroundColor: AppColors.red,
               onPressed: onLogout,
@@ -41,7 +41,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
 
   Widget _buildNavButton(String text, ScreenType type) {
     return Expanded(
-      child: Button(
+      child: CustomButton(
         text: text,
         backgroundColor: currentScreen == type
             ? AppColors.blue

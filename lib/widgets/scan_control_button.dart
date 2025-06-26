@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
-import 'button.dart';
+import 'custom_button.dart';
 
 class ScanControlButton extends StatelessWidget {
   final bool isScanning;
@@ -17,7 +17,7 @@ class ScanControlButton extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 8),
       child: IntrinsicWidth(
-        child: Button(
+        child: CustomButton(
           text: isScanning ? '중지' : '스캔',
           backgroundColor: AppColors.blue,
           onPressed: onPressed,
