@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/app_config.dart';
 
-
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
@@ -33,25 +32,30 @@ class _QRScannerPageState extends State<QRScannerPage> {
   };
 
   // 스캔 시작/종료 토글
-  void _toggleScan() {
+  void _toggleScan() async {
     setState(() {
       isScanning = !isScanning;
-      result = isScanning ? 'QR 코드를 스캔 중...' : '버튼을 눌러 스캔을 시작하세요';
-      if (isScanning) {
-        controller?.resumeCamera();
-      } else {
-        controller?.pauseCamera();
-      }
+      result = isScanning ? 'QR 코드를 스캔 중...' : '스캔이 중지되었습니다';
     });
+
+    if (isScanning) {
+      await controller?.resumeCamera();
+    } else {
+      await controller?.pauseCamera();
+    }
   }
 
   // 스캔 결과 처리
   Future<void> _sendScanResult(String scannedData) async {
-    if (_isProcessing) return;
-    _isProcessing = true;
+    // 처리 시작 시 상태를 먼저 업데이트합니다.
+    setState(() {
+      isScanning = false;
+      _isProcessing = true;
+      result = '처리 중...';
+    });
 
-    // 1. 스캔 전 차량 상태 확인
     try {
+      // 1. 스캔 전 차량 상태 확인
       final String vehicleApiUrl = '${AppConfig.apiUrl}/api/vehicle/1000';
       final vehicleResponse = await http
           .get(Uri.parse(vehicleApiUrl))
@@ -64,21 +68,14 @@ class _QRScannerPageState extends State<QRScannerPage> {
 
         if (currentLoad >= maxLoad) {
           setState(() => result = '차량이 가득 찼습니다. 스캔할 수 없습니다.');
-          _isProcessing = false;
-          return; // API 요청 차단
+          return; // API 요청 전에 함수 종료
         }
       } else {
         throw Exception('차량 상태 확인 실패');
       }
-    } catch (e) {
-      setState(() => result = '차량 상태 확인 오류: ${e.toString()}');
-      _isProcessing = false;
-      return;
-    }
 
-    // 2. 차량에 여유가 있을 경우 데이터 전송
-    final String packageApiUrl = '${AppConfig.apiUrl}/api/package';
-    try {
+      // 2. 차량에 여유가 있을 경우 데이터 전송
+      final String packageApiUrl = '${AppConfig.apiUrl}/api/package';
       final parts = scannedData.split('\n');
       if (parts.length < 2) throw Exception('올바르지 않은 QR 형식: [지역]\n[패키지 타입] 필요');
 
@@ -109,7 +106,10 @@ class _QRScannerPageState extends State<QRScannerPage> {
         () => result = '오류: ${e.toString().replaceAll('Exception: ', '')}',
       );
     } finally {
-      _isProcessing = false;
+      // 모든 처리가 끝나면 _isProcessing 상태를 false로 변경합니다.
+      setState(() {
+        _isProcessing = false;
+      });
     }
   }
 
@@ -143,16 +143,18 @@ class _QRScannerPageState extends State<QRScannerPage> {
   }
 
   void _onQRViewCreated(QRViewController controller) {
-    this.controller = controller;
+    setState(() {
+      this.controller = controller;
+    });
     _scanSubscription?.cancel();
     _scanSubscription = controller.scannedDataStream.listen((scanData) async {
-      if (scanData.code != null && isScanning && !_isProcessing) {
-        setState(() {
-          isScanning = false;
-          result = '처리 중...';
-        });
-        await _sendScanResult(scanData.code!);
-        controller.pauseCamera();
+      // 스캔 중이 아니면 무시
+      if (!isScanning || _isProcessing) return;
+
+      if (scanData.code != null) {
+        // 카메라를 먼저 멈추고, 결과 처리를 시작합니다.
+        await controller.pauseCamera();
+        _sendScanResult(scanData.code!);
       }
     });
   }

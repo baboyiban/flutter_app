@@ -6,6 +6,8 @@ class CustomAlertDialog extends StatelessWidget {
   final Color backgroundColor;
   final double borderRadius;
   final EdgeInsetsGeometry contentPadding;
+  final bool dimBackground; // 추가: 어두운 배경 여부
+  final Color dimColor; // 추가: 배경 색상
 
   const CustomAlertDialog({
     super.key,
@@ -13,11 +15,13 @@ class CustomAlertDialog extends StatelessWidget {
     this.backgroundColor = AppColors.white,
     this.borderRadius = 8,
     this.contentPadding = const EdgeInsets.all(16),
+    this.dimBackground = true,
+    this.dimColor = const Color.fromRGBO(0, 0, 0, 0.5),
   });
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    Widget dialog = Center(
       child: Card(
         color: backgroundColor,
         shape: RoundedRectangleBorder(
@@ -25,6 +29,20 @@ class CustomAlertDialog extends StatelessWidget {
         ),
         child: Padding(padding: contentPadding, child: child),
       ),
+    );
+
+    if (!dimBackground) return dialog;
+
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: AbsorbPointer(
+            absorbing: true,
+            child: Container(color: dimColor),
+          ),
+        ),
+        dialog,
+      ],
     );
   }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/constants/app_colors.dart';
 import 'package:flutter_app/widgets/custom_alert_dialog.dart';
 import 'package:flutter_app/widgets/confirmed_card.dart';
+import 'package:flutter_app/widgets/custom_button.dart';
 import 'package:flutter_app/widgets/mqtt_emergency_overlay.dart';
 import 'package:flutter_app/widgets/top_label_bar.dart';
 import 'package:flutter_app/widgets/custom_bottom_navigation_bar.dart';
@@ -94,19 +96,20 @@ class _MainScreenState extends State<MainScreen> {
                   : Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(dialogMessage),
+                        Text(dialogMessage, style: TextStyle(fontSize: 16)),
                         const SizedBox(height: 16),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            TextButton(
-                              onPressed: _onCancelDialog,
-                              child: const Text('아니요'),
+                            CustomButton(
+                              onPressed: _onConfirmLogout,
+                              text: '예',
                             ),
                             const SizedBox(width: 16),
-                            TextButton(
-                              onPressed: _onConfirmLogout,
-                              child: const Text('예'),
+                            CustomButton(
+                              onPressed: _onCancelDialog,
+                              text: '아니요',
+                              backgroundColor: AppColors.red,
                             ),
                           ],
                         ),

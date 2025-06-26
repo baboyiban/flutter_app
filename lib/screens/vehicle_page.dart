@@ -122,17 +122,18 @@ class _VehiclePageState extends State<VehiclePage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('아니요'),
-                  ),
-                  const SizedBox(width: 16),
-                  TextButton(
+                  CustomButton(
                     onPressed: () {
                       Navigator.of(context).pop();
                       _sendDeparture();
                     },
-                    child: const Text('예'),
+                    text: '예',
+                    backgroundColor: AppColors.blue,
+                  ),
+                  const SizedBox(width: 16),
+                  CustomButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    text: '아니요',
                   ),
                 ],
               ),

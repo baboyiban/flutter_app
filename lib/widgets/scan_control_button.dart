@@ -4,7 +4,7 @@ import 'custom_button.dart';
 
 class ScanControlButton extends StatelessWidget {
   final bool isScanning;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   const ScanControlButton({
     super.key,

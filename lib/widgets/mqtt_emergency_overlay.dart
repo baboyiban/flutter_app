@@ -5,6 +5,7 @@ import 'package:flutter_app/constants/app_colors.dart';
 import 'package:flutter_app/services/mqtt_service.dart';
 import 'package:flutter_app/widgets/custom_alert_dialog.dart';
 import 'package:flutter_app/widgets/confirmed_card.dart';
+import 'package:flutter_app/widgets/custom_button.dart';
 import 'package:flutter_app/widgets/custom_dropdown_button.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 
@@ -124,6 +125,7 @@ class _MqttEmergencyOverlayState extends State<MqttEmergencyOverlay> {
           Center(
             child: _showAlert
                 ? CustomAlertDialog(
+                    backgroundColor: AppColors.red,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -135,7 +137,7 @@ class _MqttEmergencyOverlayState extends State<MqttEmergencyOverlay> {
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 16),
                         CustomDropdownButton(
                           items: _reasons,
                           value: _selectedReason,
@@ -157,15 +159,11 @@ class _MqttEmergencyOverlayState extends State<MqttEmergencyOverlay> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            TextButton(
-                              onPressed: () =>
-                                  setState(() => _showAlert = false),
-                              child: const Text('취소'),
-                            ),
-                            const SizedBox(width: 16),
-                            TextButton(
+                            CustomButton(
                               onPressed: _confirm,
-                              child: const Text('확인'),
+                              text: '🚨 확인',
+                              backgroundColor: AppColors.darkRed,
+                              textColor: AppColors.white,
                             ),
                           ],
                         ),
