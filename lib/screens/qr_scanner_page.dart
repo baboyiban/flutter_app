@@ -128,7 +128,7 @@ class _QRScannerPageState extends State<QRScannerPage> {
                   qrKey: qrKey,
                   onViewCreated: _onQRViewCreated,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
                 ScanControlButton(
                   isScanning: isScanning,
                   onPressed: _toggleScan,

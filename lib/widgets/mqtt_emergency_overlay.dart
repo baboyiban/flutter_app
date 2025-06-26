@@ -149,7 +149,7 @@ class _MqttEmergencyOverlayState extends State<MqttEmergencyOverlay> {
                           backgroundColor: AppColors.white,
                           borderRadius: 8,
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
+                            horizontal: 16,
                             vertical: 8,
                           ),
                           textStyle: const TextStyle(color: AppColors.black),
@@ -164,6 +164,10 @@ class _MqttEmergencyOverlayState extends State<MqttEmergencyOverlay> {
                               text: '🚨 확인',
                               backgroundColor: AppColors.darkRed,
                               textColor: AppColors.white,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
                             ),
                           ],
                         ),

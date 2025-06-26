@@ -104,19 +104,26 @@ class _MainScreenState extends State<MainScreen> {
                             CustomButton(
                               onPressed: _onConfirmLogout,
                               text: '예',
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
                             ),
-                            const SizedBox(width: 16),
+                            const SizedBox(width: 8),
                             CustomButton(
                               onPressed: _onCancelDialog,
                               text: '아니요',
                               backgroundColor: AppColors.red,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
                             ),
                           ],
                         ),
                       ],
                     ),
             ),
-
           const MqttEmergencyOverlay(),
         ],
       ),
