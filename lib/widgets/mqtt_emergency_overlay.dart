@@ -59,7 +59,7 @@ class _MqttEmergencyOverlayState extends State<MqttEmergencyOverlay> {
     );
     final data = jsonDecode(payload);
 
-    if (data['led_status'] == '빨강') {
+    if (data['led_status'] == '하양') {
       setState(() {
         internalId = data['internal_id'];
         message = data['message'];
