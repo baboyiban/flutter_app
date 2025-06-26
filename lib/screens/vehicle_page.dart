@@ -68,7 +68,7 @@ class _VehiclePageState extends State<VehiclePage> {
   }
 
   void _startAutoRefresh() {
-    fetchVehicles(); // Initial fetch
+    fetchVehicles();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       fetchVehicles();
     });
