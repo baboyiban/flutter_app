@@ -1,43 +1,60 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 
+enum ButtonWidthType { fitContent, fullWidth }
+
 class Button extends StatelessWidget {
   final String text;
-  final Color color;
+  final Color backgroundColor;
+  final Color textColor;
   final VoidCallback? onPressed;
   final EdgeInsetsGeometry? padding;
   final bool isActive;
+  final ButtonWidthType widthType;
+  final double textSize;
 
   const Button({
     super.key,
     required this.text,
-    required this.color,
+    required this.backgroundColor,
+    this.textColor = AppColors.text,
     this.padding,
     this.onPressed,
     this.isActive = true,
+    this.widthType = ButtonWidthType.fitContent,
+    this.textSize = 16.0,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        decoration: BoxDecoration(
-          color: isActive ? color : AppColors.red,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        padding: padding ?? EdgeInsets.all(16),
-        child: Center(
-          child: Text(
-            text,
-            style: const TextStyle(
-              fontSize: 16,
-              color: AppColors.text,
-              fontWeight: FontWeight.normal,
-            ),
+    final buttonContent = Container(
+      decoration: BoxDecoration(
+        color: isActive ? backgroundColor : AppColors.red,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      padding: padding ?? const EdgeInsets.all(16),
+      child: Center(
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: textSize,
+            color: textColor,
+            fontWeight: FontWeight.normal,
           ),
         ),
       ),
     );
+
+    final button = InkWell(
+      onTap: isActive ? onPressed : null,
+      borderRadius: BorderRadius.circular(8),
+      child: buttonContent,
+    );
+
+    if (widthType == ButtonWidthType.fullWidth) {
+      return SizedBox(width: double.infinity, child: button);
+    } else {
+      return button;
+    }
   }
 }

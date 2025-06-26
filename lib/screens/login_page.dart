@@ -118,7 +118,7 @@ class _LoginPageState extends State<LoginPage> {
             Container(
               width: fieldWidth,
               decoration: BoxDecoration(
-                color: const Color(0xFFDBEAFE), // bg-blue-100
+                color: AppColors.blue,
                 borderRadius: BorderRadius.circular(borderRadius),
               ),
               padding: const EdgeInsets.all(8),

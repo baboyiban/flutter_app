@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/widgets/mqtt_emergency_overlay.dart';
 import '../constants/screen_type.dart';
 import '../widgets/top_label_bar.dart';
 import '../widgets/custom_bottom_navigation_bar.dart';
@@ -26,19 +27,24 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: false, // 이 줄 추가!
-      body: SafeArea(
-        child: Column(
-          children: [
-            const TopLabelBar(),
-            Expanded(child: _buildCurrentScreen()),
-            CustomBottomNavigationBar(
-              currentScreen: currentScreen,
-              onScreenChanged: _changeScreen,
-              onLogout: widget.onLogout,
+      resizeToAvoidBottomInset: false,
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Column(
+              children: [
+                const TopLabelBar(),
+                Expanded(child: _buildCurrentScreen()),
+                CustomBottomNavigationBar(
+                  currentScreen: currentScreen,
+                  onScreenChanged: _changeScreen,
+                  onLogout: widget.onLogout,
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          const MqttEmergencyOverlay(), // 오버레이가 SafeArea 바깥에 위치!
+        ],
       ),
     );
   }

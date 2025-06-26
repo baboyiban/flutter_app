@@ -19,7 +19,7 @@ class ScanControlButton extends StatelessWidget {
       child: IntrinsicWidth(
         child: Button(
           text: isScanning ? '중지' : '스캔',
-          color: AppColors.blue,
+          backgroundColor: AppColors.blue,
           onPressed: onPressed,
           isActive: !isScanning,
         ),

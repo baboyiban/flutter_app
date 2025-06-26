@@ -30,7 +30,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
           Expanded(
             child: Button(
               text: '로그아웃',
-              color: AppColors.red,
+              backgroundColor: AppColors.red,
               onPressed: onLogout,
             ),
           ),
@@ -43,7 +43,9 @@ class CustomBottomNavigationBar extends StatelessWidget {
     return Expanded(
       child: Button(
         text: text,
-        color: currentScreen == type ? AppColors.blue : AppColors.deepGray,
+        backgroundColor: currentScreen == type
+            ? AppColors.blue
+            : AppColors.deepGray,
         onPressed: () => onScreenChanged(type),
       ),
     );
