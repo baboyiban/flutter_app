@@ -46,7 +46,6 @@ class _QRScannerPageState extends State<QRScannerPage> {
 
   // 스캔 결과 처리
   Future<void> _sendScanResult(String scannedData) async {
-    // 처리 시작 시 상태를 먼저 업데이트합니다.
     setState(() {
       isScanning = false;
       _isProcessing = true;
@@ -67,7 +66,7 @@ class _QRScannerPageState extends State<QRScannerPage> {
 
         if (currentLoad >= maxLoad) {
           setState(() => result = '차량이 가득 찼습니다. 스캔할 수 없습니다.');
-          return; // API 요청 전에 함수 종료
+          return;
         }
       } else {
         throw Exception('차량 상태 확인 실패');
@@ -95,17 +94,30 @@ class _QRScannerPageState extends State<QRScannerPage> {
 
       if (response.statusCode == 201) {
         setState(() => result = '등록 완료: ${parts[0]}, ${parts[1]}');
+      } else if (response.statusCode == 409) {
+        // 409 Conflict: 중복 데이터
+        setState(() => result = '중복된 데이터입니다');
+      } else if (response.statusCode == 400) {
+        // 400 Bad Request: 잘못된 요청
+        final errorBody = jsonDecode(response.body);
+        final errorMsg = errorBody['error']?.toString() ?? '잘못된 요청입니다';
+        setState(() => result = errorMsg);
       } else {
-        throw Exception(
-          jsonDecode(response.body)['error'] ?? 'Failed to create record',
-        );
+        // 기타 에러
+        final errorBody = jsonDecode(response.body);
+        final errorMsg = errorBody['error']?.toString() ?? '알 수 없는 오류';
+        // 혹시 중복 메시지가 error에 포함되어 있다면 추가로 체크
+        if (errorMsg.contains('Duplicate entry') || errorMsg.contains('중복')) {
+          setState(() => result = '중복된 데이터입니다');
+        } else {
+          setState(() => result = '오류: $errorMsg');
+        }
       }
     } catch (e) {
       setState(
         () => result = '오류: ${e.toString().replaceAll('Exception: ', '')}',
       );
     } finally {
-      // 모든 처리가 끝나면 _isProcessing 상태를 false로 변경합니다.
       setState(() {
         _isProcessing = false;
       });

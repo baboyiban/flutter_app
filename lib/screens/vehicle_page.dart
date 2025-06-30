@@ -205,7 +205,7 @@ class _VehiclePageState extends State<VehiclePage> {
             ),
             const SizedBox(height: 16),
             Text(
-              '🚀 현재 위치: ${vehicle != null ? "(${vehicle.coordX}, ${vehicle.coordY}) / (${vehicle.aiCoordX}, ${vehicle.aiCoordY})" : "..."}',
+              '🚀 현재 위치: ${vehicle != null ? "(${vehicle.coordX ?? ''}, ${vehicle.coordY ?? ''}) / (${vehicle.aiCoordX ?? ''}, ${vehicle.aiCoordY ?? ''})" : "..."}',
               style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 32),
