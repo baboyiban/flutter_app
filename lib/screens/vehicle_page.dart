@@ -214,7 +214,7 @@ class _VehiclePageState extends State<VehiclePage> {
               children: [
                 CustomButton(
                   onPressed: _callVehicle,
-                  text: "차량 호출",
+                  text: "차량 출발",
                   widthType: CustomButtonWidthType.fitContent,
                   backgroundColor: AppColors.blue,
                 ),

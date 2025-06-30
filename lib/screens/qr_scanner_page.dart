@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/app_config.dart';
-
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
@@ -118,23 +117,32 @@ class _QRScannerPageState extends State<QRScannerPage> {
     return Column(
       children: [
         Expanded(
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                QRScannerView(
-                  key: const ValueKey('qr_view'),
-                  isScanning: isScanning,
-                  qrKey: qrKey,
-                  onViewCreated: _onQRViewCreated,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        QRScannerView(
+                          key: const ValueKey('qr_view'),
+                          isScanning: isScanning,
+                          qrKey: qrKey,
+                          onViewCreated: _onQRViewCreated,
+                        ),
+                        const SizedBox(height: 16),
+                        ScanControlButton(
+                          isScanning: isScanning,
+                          onPressed: _toggleScan,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 16),
-                ScanControlButton(
-                  isScanning: isScanning,
-                  onPressed: _toggleScan,
-                ),
-              ],
-            ),
+              );
+            },
           ),
         ),
         ScanResultDisplay(result: result),
