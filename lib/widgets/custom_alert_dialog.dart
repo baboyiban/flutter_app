@@ -5,7 +5,7 @@ class CustomAlertDialog extends StatelessWidget {
   final Widget child;
   final Color backgroundColor;
   final double borderRadius;
-  final EdgeInsetsGeometry contentPadding;
+  final EdgeInsetsGeometry padding;
   final bool dimBackground; // 추가: 어두운 배경 여부
   final Color dimColor; // 추가: 배경 색상
   final EdgeInsets margin; // 마진
@@ -14,11 +14,11 @@ class CustomAlertDialog extends StatelessWidget {
     super.key,
     required this.child,
     this.backgroundColor = AppColors.white,
-    this.borderRadius = 16,
-    this.contentPadding = const EdgeInsets.all(16),
+    this.borderRadius = 8,
+    this.padding = const EdgeInsets.all(0),
     this.dimBackground = true,
     this.dimColor = const Color.fromRGBO(0, 0, 0, 0.5),
-    this.margin = const EdgeInsets.all(16),
+    this.margin = const EdgeInsets.all(8),
   });
 
   @override
@@ -31,7 +31,7 @@ class CustomAlertDialog extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(borderRadius),
         ),
-        child: Padding(padding: contentPadding, child: child),
+        child: Padding(padding: padding, child: child),
       ),
     );
 

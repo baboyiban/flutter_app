@@ -28,13 +28,12 @@ class _VehiclePageState extends State<VehiclePage> {
   static const _mqttPort = 1883;
   static const _publishTopic = 'departure_A';
 
+  bool _isSending = false; // 중복 전송 방지 플래그
+
   @override
   void initState() {
     super.initState();
-    Logger.root.level = Level.ALL;
-    Logger.root.onRecord.listen((record) {
-      debugPrint('${record.level.name}: ${record.time}: ${record.message}');
-    });
+    // Logger 설정 및 리스너는 main.dart에서 한 번만!
     _mqttService = MqttService(
       host: _mqttHost,
       port: _mqttPort,
@@ -88,6 +87,7 @@ class _VehiclePageState extends State<VehiclePage> {
   }
 
   void _callVehicle() {
+    if (_isSending) return; // 이미 전송 중이면 무시
     if (vehicles.isEmpty) return;
     final vehicle = vehicles[0];
     if (vehicle.currentLoad <= vehicle.maxLoad) {
@@ -97,11 +97,14 @@ class _VehiclePageState extends State<VehiclePage> {
     }
   }
 
-  void _sendDeparture() {
+  void _sendDeparture() async {
+    setState(() => _isSending = true);
     final builder = MqttClientPayloadBuilder();
     builder.addString(jsonEncode({"start": true}));
     _mqttService.publish(_publishTopic, MqttQos.atLeastOnce, builder.payload!);
     _logger.info('Vehicle call message sent via MQTT');
+    await Future.delayed(const Duration(seconds: 1)); // debounce 효과
+    if (mounted) setState(() => _isSending = false);
   }
 
   void _showDepartureDialog(Vehicle vehicle) {
@@ -110,6 +113,7 @@ class _VehiclePageState extends State<VehiclePage> {
       barrierDismissible: false,
       builder: (context) {
         return CustomAlertDialog(
+          padding: EdgeInsets.all(8),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -118,24 +122,26 @@ class _VehiclePageState extends State<VehiclePage> {
                 style: const TextStyle(fontSize: 16, color: AppColors.black),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   CustomButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      _sendDeparture();
-                    },
+                    onPressed: _isSending
+                        ? null
+                        : () {
+                            Navigator.of(context).pop();
+                            _sendDeparture();
+                          },
                     text: '예',
                     backgroundColor: AppColors.blue,
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: EdgeInsets.all(8),
                   ),
                   const SizedBox(width: 8),
                   CustomButton(
                     onPressed: () => Navigator.of(context).pop(),
                     text: '아니요',
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: EdgeInsets.all(8),
                   ),
                 ],
               ),
@@ -213,7 +219,7 @@ class _VehiclePageState extends State<VehiclePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 CustomButton(
-                  onPressed: _callVehicle,
+                  onPressed: _isSending ? null : _callVehicle,
                   text: "차량 출발",
                   widthType: CustomButtonWidthType.fitContent,
                   backgroundColor: AppColors.blue,

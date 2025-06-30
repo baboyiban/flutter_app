@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/constants/app_colors.dart';
 import 'package:flutter_app/widgets/custom_alert_dialog.dart';
-import 'package:flutter_app/widgets/confirmed_card.dart';
 import 'package:flutter_app/widgets/custom_button.dart';
 import 'package:flutter_app/widgets/mqtt_emergency_overlay.dart';
 import 'package:flutter_app/widgets/top_label_bar.dart';
@@ -22,7 +21,6 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   ScreenType currentScreen = ScreenType.qr;
   bool showDialog = false;
-  bool showConfirmed = false;
   String dialogMessage = '정말로 로그아웃 하시겠습니까?';
 
   void _changeScreen(ScreenType type) {
@@ -35,7 +33,6 @@ class _MainScreenState extends State<MainScreen> {
     if (!showDialog) {
       setState(() {
         showDialog = true;
-        showConfirmed = false;
         dialogMessage = '정말로 로그아웃 하시겠습니까?';
       });
     }
@@ -44,14 +41,8 @@ class _MainScreenState extends State<MainScreen> {
   void _onConfirmLogout() {
     setState(() {
       showDialog = false;
-      showConfirmed = true;
     });
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() => showConfirmed = false);
-        widget.onLogout?.call();
-      }
-    });
+    widget.onLogout?.call();
   }
 
   void _onCancelDialog() {
@@ -89,40 +80,33 @@ class _MainScreenState extends State<MainScreen> {
               ],
             ),
           ),
-          if (showDialog || showConfirmed)
+          if (showDialog)
             CustomAlertDialog(
-              child: showConfirmed
-                  ? const ConfirmedCard()
-                  : Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(dialogMessage, style: TextStyle(fontSize: 16)),
-                        const SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            CustomButton(
-                              onPressed: _onConfirmLogout,
-                              text: '예',
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            CustomButton(
-                              onPressed: _onCancelDialog,
-                              text: '아니요',
-                              backgroundColor: AppColors.red,
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+              padding: EdgeInsets.all(8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(dialogMessage, style: TextStyle(fontSize: 16)),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CustomButton(
+                        onPressed: _onConfirmLogout,
+                        text: '예',
+                        padding: EdgeInsets.all(8),
+                      ),
+                      const SizedBox(width: 8),
+                      CustomButton(
+                        onPressed: _onCancelDialog,
+                        text: '아니요',
+                        backgroundColor: AppColors.red,
+                        padding: EdgeInsets.all(8),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           const MqttEmergencyOverlay(),
         ],
